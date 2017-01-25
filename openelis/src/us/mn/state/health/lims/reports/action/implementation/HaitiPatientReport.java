@@ -483,11 +483,11 @@ public abstract class HaitiPatientReport extends Report {
             data.setFirstName(reportPatient.getPerson().getFirstName());
             data.setLastName(reportPatient.getPerson().getLastName());
             if("true".equals(ConfigurationProperties.getInstance().getPropertyValue(Property.SHOW_MIDDLENAME_ON_REPORT_PRINT))){
+                String middleName = (reportPatient.getPerson().getMiddleName() != null ?reportPatient.getPerson().getMiddleName() + " " : "" );
                 data.setPatientName(
                     reportPatient.getPerson().getFirstName()
                         + " "
-                        + reportPatient.getPerson().getMiddleName()
-                        + " "
+                        + middleName
                         + reportPatient.getPerson().getLastName());
             }
         }
