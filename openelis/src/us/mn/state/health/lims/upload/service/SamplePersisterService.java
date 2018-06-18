@@ -17,6 +17,7 @@
 package us.mn.state.health.lims.upload.service;
 
 import us.mn.state.health.lims.common.exception.LIMSDuplicateRecordException;
+import us.mn.state.health.lims.common.util.DateUtil;
 import us.mn.state.health.lims.common.util.SystemConfiguration;
 import us.mn.state.health.lims.sample.dao.SampleDAO;
 import us.mn.state.health.lims.sample.daoimpl.SampleDAOImpl;
@@ -56,7 +57,7 @@ public class SamplePersisterService {
             Sample sample = new Sample();
             sample.setAccessionNumber(csvSample.accessionNumber);
             SimpleDateFormat datetimeFormatter = new SimpleDateFormat("dd-MM-yyyy");
-            java.util.Date parsedDate = datetimeFormatter.parse(csvSample.sampleDate);
+            Date parsedDate = datetimeFormatter.parse(csvSample.sampleDate);
             Timestamp timestamp = new Timestamp(parsedDate.getTime());
             sample.setCollectionDate(timestamp);
             sample.setEnteredDate(timestamp);
