@@ -1717,7 +1717,41 @@
         </sql>
     </changeSet>
 
-    <changeSet context="bahmni" author="dipakthapa" id="dhis-mapper-2018-06-21-12:15">
+    <changeSet context="bahmni" author="dipakthapa" id="dhis-mapper-2018-07-22-11:45">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="dhis2_test" />
+            </not>
+        </preConditions>
+        <comment>
+            Create DHIS Test Name table
+        </comment>
+        <createTable tableName="dhis2_test" schemaName="clinlims" >
+            <column name="id" type="numeric(10,0)" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="test_name" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    
+    <changeSet context="bahmni" author="dipakthapa" id="dhis-test-name-2018-07-22-11:46">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from dhis2_test;
+            </sqlCheck>
+        </preConditions>
+        <comment>Bulk insertion of dhis tests</comment>
+        <sqlFile path="migration/dhis2_test_insertStatements.sql" />
+    </changeSet>
+
+    <changeSet context="bahmni" author="dipakthapa" id="test-name-2018-07-22-12:50">
+        <comment>Add function to get id for a dhis test name</comment>
+        <sqlFile path="migration/get_dhis_test_id.sql" splitStatements="false" />
+    </changeSet>
+
+    <changeSet context="bahmni" author="dipakthapa" id="dhis-mapper-2018-07-22-12:15">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="dhis2_lab_test" />
@@ -1730,10 +1764,7 @@
             <column name="id" type="numeric(10,0)" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="dhis_test_name" type="varchar(255)">
-                <constraints nullable="false" />
-            </column>
-            <column name="ehr_test_name" type="varchar(255)">
+            <column name="dhis_test_id" type="integer">
                 <constraints nullable="false" />
             </column>
             <column name="ehr_test_id" type="numeric(10,0)">
@@ -1746,9 +1777,15 @@
                                  onUpdate="RESTRICT"
                                  referencedColumnNames="id"
                                  referencedTableName="test"/>
+        <addForeignKeyConstraint baseColumnNames="dhis_test_id"
+                                 baseTableName="dhis2_lab_test"
+                                 constraintName="fk_dhis2_test"
+                                 onUpdate="RESTRICT"
+                                 referencedColumnNames="id"
+                                 referencedTableName="dhis2_test"/>
     </changeSet>
 
-    <changeSet context="bahmni" author="dipakthapa" id="test-name-2018-06-21-12:20">
+    <changeSet context="bahmni" author="dipakthapa" id="test-name-2018-07-22-12:20">
         <comment>Add function to get id for a test</comment>
         <sqlFile path="migration/get_test_id_from_test_name.sql" splitStatements="false" />
     </changeSet>
