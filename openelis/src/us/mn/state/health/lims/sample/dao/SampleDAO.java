@@ -49,6 +49,7 @@ public interface SampleDAO extends BaseDAO {
 	public void getSampleByAccessionNumber(Sample sample) throws LIMSRuntimeException;
 
 	public Sample getSampleByAccessionNumber(String accessionNumber) throws LIMSRuntimeException;
+	public Sample getSampleByAccessionNumberAndType(String accessionNumber, String sampleType) throws LIMSRuntimeException;
 
 	public boolean insertDataWithAccessionNumber(Sample sample) throws LIMSRuntimeException;
 
@@ -87,4 +88,5 @@ public interface SampleDAO extends BaseDAO {
 
 	public Sample getSampleByID(String id) throws LIMSRuntimeException;
 
+	public Sample getSampleByUuidAndSampleTypeIdAndWithoutAccessionNumber(String uuid, String sampleTypeId);
 }

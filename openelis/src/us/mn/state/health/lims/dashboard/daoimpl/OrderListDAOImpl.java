@@ -24,32 +24,47 @@ import us.mn.state.health.lims.common.util.DateUtil;
 import us.mn.state.health.lims.dashboard.dao.OrderListDAO;
 import us.mn.state.health.lims.dashboard.valueholder.Order;
 import us.mn.state.health.lims.hibernate.HibernateUtil;
+import us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
 import static java.lang.Integer.parseInt;
-import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.*;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.BiologistRejected;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.Finalized;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.FinalizedRO;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.NotTested;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.ReferedOut;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.ReferredIn;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.TechnicalAcceptance;
+import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.AnalysisStatus.TechnicalRejected;
 import static us.mn.state.health.lims.statusofsample.util.StatusOfSampleUtil.getStatusID;
+import us.mn.state.health.lims.dashboard.daoimpl.OrderListDAOHelper;
 
 public class OrderListDAOImpl implements OrderListDAO {
 
     private Logger logger = LogManager.getLogger(OrderListDAOImpl.class);
 
     private static String COMMENT_SEPARATOR = "<~~>";
+    private OrderListDAOHelper orderListDAOHelper;
 
-    public OrderListDAOImpl() {
+    public OrderListDAOImpl(Boolean isGroupBySampleEnabled) {
+        orderListDAOHelper = new OrderListDAOHelper(isGroupBySampleEnabled);
     }
 
     @Override
     public List<Order> getAllToday() {
         List<Order> orderList = new ArrayList<>();
         String condition = "sample.accession_number is not null and analysis.status_id IN (" + getAllNonReferredAnalysisStatus() + ") ";
-        String sqlForAllTestsToday = createSqlStringForTodayOrders(condition, "sample.accession_number");
+        String sqlForAllTestsToday = orderListDAOHelper.createSqlForToday(condition, "sample.accession_number",
+                getPendingAnalysisStatus(), getPendingValidationAnalysisStatus(), getCompletedStatus());
         PreparedStatement preparedStatement = null;
         ResultSet todayAccessions = null;
         try {
@@ -74,36 +89,16 @@ public class OrderListDAOImpl implements OrderListDAO {
 
     @Override
     public List<Order> getAllPendingBeforeToday() {
-        List<Order> orderList = new ArrayList<>();
         String condition = "sample.accession_number is not null and analysis.status_id IN (" + getAllNonReferredAnalysisStatus() + ")";
-        String sqlForAllTestsToday = createSqlStringForPendingOrders(condition, "sample.accession_number");
-
-        ResultSet pendingAccessions = null;
-        PreparedStatement preparedStatement = null;
-        try {
-            //Dont'use current_date in prepared_statement. I know its weird, but
-            //The session fires query with current_date = date_on_which_session_was_created and gives wron result on next daypreparedStatement.setTimestamp(1, DateUtil.getTodayAsTimestamp());
-            preparedStatement = getPreparedStatement(sqlForAllTestsToday);
-            preparedStatement.setTimestamp(1, DateUtil.getTodayAsTimestamp());
-            pendingAccessions = preparedStatement.executeQuery();
-            while (pendingAccessions.next()) {
-                Order order = createOrder(pendingAccessions, false, null);
-                orderList.add(order);
-            }
-            return orderList;
-        } catch (SQLException e) {
-            logger.error("Error closing resultSet", e);
-            throw new LIMSRuntimeException(e);
-        } finally {
-            closeResultSet(pendingAccessions);
-            closePreparedStatement(preparedStatement);
-        }
+        return getOrders(orderListDAOHelper.createSqlForPendingBeforeToday(condition, "sample.accession_number",
+                getPendingAnalysisStatus(), getPendingValidationAnalysisStatus(), analysesReferredOrInFinalStatus()));
     }
 
     @Override
     public List<Order> getAllSampleNotCollectedToday() {
         List<Order> orderList = new ArrayList<>();
-        String sqlForAllSampleNotCollectedToday = createSqlStringForTodayOrders("sample.accession_number is null and analysis.status_id IN (" + getAllNonReferredAnalysisStatus() + ")", "sample.lastupdated");
+        String sqlForAllSampleNotCollectedToday = orderListDAOHelper.createSqlForToday("sample.accession_number is null and analysis.status_id IN (" + getAllNonReferredAnalysisStatus() + ")",
+                "sample.lastupdated", getPendingAnalysisStatus(), getPendingValidationAnalysisStatus(), getCompletedStatus());
 
         ResultSet sampleNotCollectedToday = null;
         PreparedStatement preparedStatement = null;
@@ -128,15 +123,22 @@ public class OrderListDAOImpl implements OrderListDAO {
 
     @Override
     public List<Order> getAllSampleNotCollectedPendingBeforeToday() {
-        List<Order> orderList = new ArrayList<>();
-        String sqlForAllSampleNotCollectedPendingBeforeToday = createSqlStringForPendingOrders("sample.accession_number is null and analysis.status_id IN (" + getAllNonReferredAnalysisStatus() + ")", "sample.lastupdated");
+        String condition = "sample.accession_number is null and analysis.status_id IN (" + getAllNonReferredAnalysisStatus() + ")";
+        String sqlForAllSampleNotCollectedPendingBeforeToday = orderListDAOHelper.createSqlForPendingBeforeToday(condition,
+                        "sample.lastupdated", getPendingAnalysisStatus(), getPendingValidationAnalysisStatus(),
+                analysesReferredOrInFinalStatus());
+        return getOrders(sqlForAllSampleNotCollectedPendingBeforeToday);
+    }
 
+    private List<Order> getOrders( String sql) {
+        List<Order> orderList = new ArrayList<>();
         ResultSet pendingAccessions = null;
         PreparedStatement preparedStatement = null;
+
         try {
             //Dont'use current_date in prepared_statement. I know its weird, but
             //The session fires query with current_date = date_on_which_session_was_created and gives wron result on next daypreparedStatement.setTimestamp(1, DateUtil.getTodayAsTimestamp());
-            preparedStatement = getPreparedStatement(sqlForAllSampleNotCollectedPendingBeforeToday);
+            preparedStatement = getPreparedStatement(sql);
             preparedStatement.setTimestamp(1, DateUtil.getTodayAsTimestamp());
             pendingAccessions = preparedStatement.executeQuery();
             while (pendingAccessions.next()) {
@@ -152,7 +154,6 @@ public class OrderListDAOImpl implements OrderListDAO {
             closePreparedStatement(preparedStatement);
         }
     }
-
     private void closePreparedStatement(PreparedStatement preparedStatement) {
         if (preparedStatement != null) {
             try {
@@ -180,33 +181,19 @@ public class OrderListDAOImpl implements OrderListDAO {
 
     private Order createOrder(ResultSet accessionResultSet, boolean completed, Timestamp completedDate) throws SQLException {
         String comments = getUniqueComments(accessionResultSet);
-        Timestamp collectionDate = accessionResultSet.getTimestamp("collection_date");
-        Timestamp orderDate = accessionResultSet.getTimestamp("entered_date");
-        Timestamp orderEnteredDate= accessionResultSet.getTimestamp("received_date");
-        Order order =  new Order(accessionResultSet.getString("accession_number"),
-                            accessionResultSet.getString("uuid"),
-                            accessionResultSet.getString("id"),
-                            accessionResultSet.getString("st_number"),
-                            accessionResultSet.getString("first_name"),
-                            accessionResultSet.getString("middle_name"),
-                            accessionResultSet.getString("last_name"),
-                            accessionResultSet.getString("sample_source"),
-                            completed,
-                            accessionResultSet.getBoolean("is_printed"),
-                            accessionResultSet.getInt("pending_tests_count"),
-                            accessionResultSet.getInt("pending_validation_count"),
-                            accessionResultSet.getInt("total_test_count"),
-                            collectionDate != null ? new Date(collectionDate.getTime()) : null,
-                            orderEnteredDate != null ? new Date(orderEnteredDate.getTime()) : null,
-                            comments
-        );
-        order.setSampleCollectionDate(collectionDate);
-        order.setOrderDate(orderDate);
-        order.setOrderEnteredDate(orderEnteredDate);
-        order.setCompletedDate(completedDate);
-        return order;
+        String sectionNames = getUniqueSectionNames(accessionResultSet);
+
+        return orderListDAOHelper.getOrder(accessionResultSet, comments, sectionNames, completed, completedDate);
     }
 
+    private String getUniqueSectionNames(ResultSet accessionResultSet) throws SQLException {
+        String sectionNames = accessionResultSet.getString("section_names");
+        return StringUtils.isNotBlank(sectionNames) ? getUniqueValueAsCSV(sectionNames.split(COMMENT_SEPARATOR)) : "";
+    }
+    private String getUniqueValueAsCSV(String[] holders) {
+        String[] unique = new HashSet<String>(Arrays.asList(holders)).toArray(new String[0]);
+        return StringUtils.join(unique, ",");
+    }
     private String getUniqueComments(ResultSet accessionResultSet) throws SQLException {
         String analysis_comments = accessionResultSet.getString("analysis_comments");
         if(StringUtils.isNotBlank(analysis_comments)) {
@@ -223,13 +210,7 @@ public class OrderListDAOImpl implements OrderListDAO {
     }
 
     private String getAllNonReferredAnalysisStatus() {
-        List<Object> inProgressAnalysisStatus = new ArrayList<>();
-        inProgressAnalysisStatus.add(parseInt(getStatusID(BiologistRejected)));//7
-        inProgressAnalysisStatus.add(parseInt(getStatusID(NotTested)));//4
-        inProgressAnalysisStatus.add(parseInt(getStatusID(TechnicalAcceptance)));//16
-        inProgressAnalysisStatus.add(parseInt(getStatusID(TechnicalRejected)));
-        inProgressAnalysisStatus.add(parseInt(getStatusID(Finalized)));//6
-        return StringUtils.join(inProgressAnalysisStatus.iterator(), ',');
+        return getAnalysisStatus(BiologistRejected, getStatusID(NotTested), TechnicalAcceptance, TechnicalRejected, Finalized);
     }
 
     private String getPendingValidationAnalysisStatus() {
@@ -246,12 +227,15 @@ public class OrderListDAOImpl implements OrderListDAO {
     }
 
     private String analysesReferredOrInFinalStatus() {
+        return getAnalysisStatus(ReferedOut, getStatusID(ReferedOut), ReferredIn, Finalized, FinalizedRO);
+    }
+    private String getAnalysisStatus(StatusOfSampleUtil.AnalysisStatus referedOut, String statusID, StatusOfSampleUtil.AnalysisStatus referredIn, StatusOfSampleUtil.AnalysisStatus finalized, StatusOfSampleUtil.AnalysisStatus finalizedRO) {
         List<Object> analysisStatuses = new ArrayList<>();
-        analysisStatuses.add(parseInt(getStatusID(ReferedOut)));
-        analysisStatuses.add(parseInt(getStatusID(ReferedOut)));
-        analysisStatuses.add(parseInt(getStatusID(ReferredIn)));
-        analysisStatuses.add(parseInt(getStatusID(Finalized)));
-        analysisStatuses.add(parseInt(getStatusID(FinalizedRO)));
+        analysisStatuses.add(parseInt(getStatusID(referedOut)));
+        analysisStatuses.add(parseInt(statusID));
+        analysisStatuses.add(parseInt(getStatusID(referredIn)));
+        analysisStatuses.add(parseInt(getStatusID(finalized)));
+        analysisStatuses.add(parseInt(getStatusID(finalizedRO)));
         return StringUtils.join(analysisStatuses.iterator(), ',');
     }
 

@@ -29,7 +29,10 @@ import us.mn.state.health.lims.systemuser.valueholder.SystemUser;
 
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Sample extends EnumValueItemImpl {
 
@@ -62,6 +65,7 @@ public class Sample extends EnumValueItemImpl {
 	private ValueHolderInterface systemUser;
     private Set<SampleItem> sampleItems;
     private Patient patient;
+    private String priority;
 
     private String uuid;
 
@@ -402,4 +406,10 @@ public class Sample extends EnumValueItemImpl {
     public void setPatient(Patient patient) {
         this.patient = patient;
     }
+	public String getPriority() {
+		return priority;
+	}
+	public void setPriority(String priority) {
+		this.priority = priority;
+	}
 }

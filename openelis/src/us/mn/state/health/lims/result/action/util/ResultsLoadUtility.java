@@ -187,12 +187,12 @@ public class ResultsLoadUtility {
      * N.B. The patient info is used to determine the limits for the results,
      * not for including patient information
      */
-    public List<TestResultItem> getGroupedTestsForSample(Sample sample) {
+    public List<TestResultItem> getGroupedTestsForSample(Sample sample, String sampleType) {
         reflexGroup = 1;
         activeKits = null;
         samples = new ArrayList<>();
         samples.add(sample);
-        return getGroupedTestsForSamples();
+        return getGroupedTestsForSamples(sampleType);
     }
 
     public List<TestResultItem> getGroupedTestsForPatient(Patient patient) {
@@ -203,6 +203,9 @@ public class ResultsLoadUtility {
         samples = sampleHumanDAO.getCollectedSamplesForPatient(patient.getId());
 
         return getGroupedTestsForSamples();
+    }
+    private List<TestResultItem> getGroupedTestsForSamples() {
+        return getGroupedTestsForSamples(null);
     }
 
     /*
@@ -427,12 +430,12 @@ public class ResultsLoadUtility {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Analysis> getAnalysisFromSample(List<Sample> samples) {
+    public List<Analysis> getAnalysisFromSample(List<Sample> samples, String sampleType) {
         List<Integer> sampleIds = new ArrayList<>();
         for(Sample sample:samples){
             sampleIds.add(Integer.parseInt(sample.getId()));
         }
-        return analysisDAO.getAnalysisBySampleIds(sampleIds,excludedAnalysisStatus);
+        return analysisDAO.getAnalysisBySampleIds(sampleIds, excludedAnalysisStatus, sampleType);
     }
 
 
@@ -557,11 +560,11 @@ public class ResultsLoadUtility {
         return sampleHumanDAO.getPatientForSample(sampleItem.getSample());
     }
 
-    private List<TestResultItem> getGroupedTestsForSamples() {
+    private List<TestResultItem> getGroupedTestsForSamples(String sampleType) {
 
         List<TestResultItem> testList = new ArrayList<>();
 
-        TestResultItem[] tests = getSortedTestsFromSamples();
+        TestResultItem[] tests = getSortedTestsFromSamples(sampleType);
 
         String currentAccessionNumber = "";
 
@@ -595,13 +598,13 @@ public class ResultsLoadUtility {
         return null;
     }
 
-    private TestResultItem[] getSortedTestsFromSamples() {
+    private TestResultItem[] getSortedTestsFromSamples(String sampleType) {
 
         List<TestResultItem> testList = new ArrayList<>();
         List<Analysis> analysisList  = new ArrayList<>();
 
                 if(!samples.isEmpty())
-                analysisList = getAnalysisFromSample(samples) ;
+                analysisList = getAnalysisFromSample(samples, sampleType) ;
 
                 for (Analysis analysis : analysisList) {
                     currSample = getSampleFromAnalysis(analysis);

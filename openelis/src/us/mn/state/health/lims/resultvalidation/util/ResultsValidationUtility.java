@@ -224,8 +224,8 @@ public class ResultsValidationUtility {
         return testResultListToAnalysisItemList(groupedTestsForAnalysisList);
     }
 
-    public List<AnalysisItem> getResultValidationListByAccessionNumber(List<AnalysisStatus> statusList, String accessionNumber) {
-        List<Analysis> analysisList = analysisDAO.getAllAnalysisByAccessionNumberAndStatus(accessionNumber, statusList);
+    public List<AnalysisItem> getResultValidationListByAccessionNumber(List<AnalysisStatus> statusList, String accessionNumber, String sampleType) {
+        List<Analysis> analysisList = analysisDAO.getAllAnalysisByAccessionNumberAndStatusAndSampleType(accessionNumber, statusList, sampleType);
         List<ResultValidationItem> groupedTestsForAnalysisList = getGroupedTestsForAnalysisList(analysisList, !StatusRules.useRecordStatusForValidation());
         return testResultListToAnalysisItemList(groupedTestsForAnalysisList);
     }
@@ -747,6 +747,7 @@ public class ResultsValidationUtility {
 
 	public List<AnalysisItem> testResultListToAnalysisItemList(List<ResultValidationItem> testResultList) {
 		List<AnalysisItem> analysisResultList = new ArrayList<AnalysisItem>();
+		reverseSortByAccessionAndSequence(testResultList);
 		for (ResultValidationItem tResultItem : testResultList) {
 			String uploadedFilePath = null;
             Result result = resultDAO.getResultById(tResultItem.getResultId());
@@ -758,6 +759,26 @@ public class ResultsValidationUtility {
 		}
 
 		return analysisResultList;
+	}
+	private static void reverseSortByAccessionAndSequence(List<ResultValidationItem> testResultList) {
+		Collections.sort(testResultList, new Comparator<ResultValidationItem>(){
+			@Override
+			public int compare(ResultValidationItem a, ResultValidationItem b) {
+				int accessionSort = b.getSequenceAccessionNumber().compareTo(a.getSequenceAccessionNumber());
+				if (accessionSort == 0) {
+					if (!GenericValidator.isBlankOrNull(a.getTestSortNumber()) && !GenericValidator.isBlankOrNull(b.getTestSortNumber())) {
+						try {
+							return Integer.parseInt(a.getTestSortNumber()) - Integer.parseInt(b.getTestSortNumber());
+						} catch (NumberFormatException e) {
+							return a.getTestName().compareTo(b.getTestName());
+						}
+					} else {
+						return a.getTestName().compareTo(b.getTestName());
+					}
+				}
+				return accessionSort;
+			}
+		});
 	}
 
 	private RecordStatus getSampleRecordStatus(Sample sample) {

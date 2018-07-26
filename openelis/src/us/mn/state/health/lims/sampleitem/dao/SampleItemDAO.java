@@ -61,4 +61,5 @@ public interface SampleItemDAO extends BaseDAO {
 
 	public SampleItem getData(String sampleItemId) throws LIMSRuntimeException;
 
+	public boolean isTypeOfSampleAndSampleExists(String sampleId, List<Integer> typeOfSampleId);
 }

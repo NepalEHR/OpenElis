@@ -1,21 +1,24 @@
 PATH_OF_CURRENT_DIRECTORY="$(pwd)"
 
-source $PATH_OF_CURRENT_DIRECTORY/scripts/vagrant/vagrant_functions.sh
+#source $PATH_OF_CURRENT_DIRECTORY/vagrant/vagrant_functions.sh
 
-BAHMNI_HOME="$PATH_OF_CURRENT_DIRECTORY/../"
-OPENELIS_HOME="$BAHMNI_HOME/OpenElis"
+cd ..
 
+OPENELIS_HOME="$(pwd)"
+
+echo "$OPENELIS_HOME"
 ant dist
-mkdir "$OPENELIS_HOME/openelis/dist/openelis"
+
 cd "$OPENELIS_HOME/openelis/dist/"
-unzip -q openelis.war -d "./openelis/."
+echo "$OPENELIS_HOME/openelis/dist/"
+unzip -q openelis.war -d "openelis"
 
-cd "$BAHMNI_HOME/bahmni-vagrant/"
+cd "$BAHMNI_HOME/"
 
-run_in_vagrant -c "sudo service bahmni-lab stop"
-run_in_vagrant -c "sudo rm -rf /opt/bahmni-lab/bahmni-lab/*"
-run_in_vagrant -c "sudo cp -r /bahmni/OpenElis/openelis/dist/openelis/* /opt/bahmni-lab/bahmni-lab/."
-run_in_vagrant -c "sudo chown -R bahmni:bahmni /opt/bahmni-lab/bahmni-lab/*"
-run_in_vagrant -c "sudo service bahmni-lab start"
+sudo service bahmni-lab stop
+sudo rm -rf /opt/bahmni-lab/bahmni-lab/*
+sudo cp -r $OPENELIS_HOME/openelis/dist/openelis/* /opt/bahmni-lab/bahmni-lab/.
+sudo chown -R bahmni:bahmni /opt/bahmni-lab/bahmni-lab/*
+sudo service bahmni-lab start
 
 cd "$PATH_OF_CURRENT_DIRECTORY"

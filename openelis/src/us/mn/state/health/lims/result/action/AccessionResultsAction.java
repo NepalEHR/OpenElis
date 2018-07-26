@@ -19,7 +19,11 @@ package us.mn.state.health.lims.result.action;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.validator.GenericValidator;
-import org.apache.struts.action.*;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionMessages;
+import org.apache.struts.action.DynaActionForm;
 import us.mn.state.health.lims.common.action.BaseAction;
 import us.mn.state.health.lims.common.log.LogEvent;
 import us.mn.state.health.lims.common.util.ConfigurationProperties;
@@ -60,6 +64,7 @@ public class AccessionResultsAction extends BaseAction {
 
 	private String accessionNumber;
 	private Sample sample;
+	private String sampleType;
 	private InventoryUtility inventoryUtility = new InventoryUtility();
 	private static SampleDAO sampleDAO = new SampleDAOImpl();
 	private static UserModuleDAO userModuleDAO = new UserModuleDAOImpl();
@@ -93,6 +98,7 @@ public class AccessionResultsAction extends BaseAction {
 		if (GenericValidator.isBlankOrNull(newPage)) {
 
 			accessionNumber = request.getParameter("accessionNumber");
+			sampleType = request.getParameter("sampleType");
 			PropertyUtils.setProperty(dynaForm, "displayTestKit", false);
 
 			if (!GenericValidator.isBlankOrNull(accessionNumber)) {
@@ -122,7 +128,7 @@ public class AccessionResultsAction extends BaseAction {
 					Patient patient = getPatient();
 					resultsUtility.addIdentifingPatientInfo(patient, dynaForm);
 
-					List<TestResultItem> results = resultsUtility.getGroupedTestsForSample(sample);
+					List<TestResultItem> results = resultsUtility.getGroupedTestsForSample(sample, sampleType);
 
 					if (resultsUtility.inventoryNeeded()) {
 						addInventory(dynaForm);
@@ -257,7 +263,10 @@ public class AccessionResultsAction extends BaseAction {
 
 
     private void getSample() {
+	    if(sampleType == null)
         sample = sampleDAO.getSampleByAccessionNumber(accessionNumber);
+	    else
+	        sample = sampleDAO.getSampleByAccessionNumberAndType(accessionNumber, sampleType);
     }
 
     protected String getPageTitleKey() {
