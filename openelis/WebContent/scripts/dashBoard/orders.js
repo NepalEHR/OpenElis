@@ -1,6 +1,5 @@
 
 function order(div, orderArray, generateLink, getColumns, alwaysValidate) {
-	alert(JSON.stringify(orderArray));
      this.div = div;
      this.orderArray = orderArray;
      this.columns = getColumns(alwaysValidate);
@@ -45,7 +44,6 @@ function changeSourceColor(source){
 	} else if (source != null && source.indexOf('OPD') !== -1){
 		return "<span style='color:green'>"+source+"</span>";
 	} else if (source == null ||typeof source == undefined){
-		//alert("This is undefined "+source);
 		source = 'N/A';
 		return "<span style='color:black'>"+source+"</span>";
 	}
