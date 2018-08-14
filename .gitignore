@@ -21,3 +21,6 @@ OpenElis.zip
 openelis.properties
 openelis/module_openelis.xml
 openelis.xml
+.classpath
+.project
+.settings/
