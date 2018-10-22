@@ -48,6 +48,7 @@
     boolean supportDynamicAddresses = false;
     boolean supportfirstNameFirst;
     boolean supportPrimaryRelative = false;
+    boolean supportPatientCaste = true;
     String stNumberFormat = ConfigurationProperties.getInstance().getPropertyValue(ConfigurationProperties.Property.ST_NUMBER_FORMAT);
  %>
 <%
@@ -67,6 +68,7 @@
     supportDynamicAddresses = FormFields.getInstance().useField(Field.DynamicAddress);
     supportfirstNameFirst = FormFields.getInstance().useField(Field.FirstNameFirst);
     supportPrimaryRelative = FormFields.getInstance().useField(Field.SupportPrimaryRelative);
+	supportPatientCaste = FormFields.getInstance().useField(Field.Caste);
 
 	if("SampleConfirmationEntryForm".equals( formName )){
 		patientIDRequired = FormFields.getInstance().useField(Field.PatientIDRequired_SampleConfirmation);
@@ -115,6 +117,7 @@ var supportMaritialStatus = <%= FormFields.getInstance().useField(Field.PatientM
 var supportHealthRegion = <%= FormFields.getInstance().useField(Field.PatientHealthRegion) %>;
 var supportHealthDistrict = <%= FormFields.getInstance().useField(Field.PatientHealthDistrict) %>;
 var supportPrimaryRelative = <%= supportPrimaryRelative %>;
+var supportPatientCaste = <%= supportPatientCaste %>;
 
 var pt_invalidElements = [];
 var pt_requiredFields = new Array( );
@@ -516,6 +519,7 @@ function  /*void*/ processSearchPopulateSuccess(xhr)
 	var healthRegion = getSelectIndexByTextFor( "healthRegionID", getXMLValue(response, "healthRegion"));
 	var healthDistrict = getXMLValue(response, "healthDistrict");
 	var primaryRelative = getXMLValue(response, "primaryRelative");
+	var casteValue = getXMLValue(response, "caste");
 
     jQuery("#PatientDetail").show();
 
@@ -545,7 +549,8 @@ function  /*void*/ processSearchPopulateSuccess(xhr)
 					maritialStatus,
 					healthRegion,
 					healthDistrict,
-                    primaryRelative);
+                    primaryRelative,
+                    casteValue);
 
     setPatientAddress(response);
 
@@ -606,7 +611,7 @@ function /*void*/ clearErrors(){
 
 function  /*void*/ setPatientInfo(nationalID, ST_ID, subjectNumber, lastName, firstName, middleName, aka, mother, street, city, dob, gender,
 		patientType, insurance, occupation, patientUpdated, personUpdated, motherInitial, commune, addressDept, educationId, nationalId, nationalOther,
-		maritialStatusId, healthRegionId, healthDistrictId, primaryRelative ) {
+		maritialStatusId, healthRegionId, healthDistrictId, primaryRelative, patientCaste ) {
 
 	clearErrors();
 
@@ -642,6 +647,9 @@ function  /*void*/ setPatientInfo(nationalID, ST_ID, subjectNumber, lastName, fi
 	}
     if(supportPrimaryRelative) {
         $("primaryRelativeID").value = primaryRelative == undefined ? "" : primaryRelative;
+    }
+    if(supportPatientCaste) {
+        $("casteID").value = patientCaste == undefined ? "" : patientCaste;
     }
 
 	if(supportAddressDepartment){
@@ -1334,6 +1342,21 @@ jQuery(function(){
 				</td>
 			</tr>
 	<% } %>
+        <% if( supportPatientCaste ){ %>
+		<tr>
+			<td align="right">
+				<bean:message  key="patient.caste" />:
+			</td>
+			<td>
+				<nested:text name='<%=formName%>'
+							 property="patientProperties.caste"
+							 onchange="updatePatientEditStatus();"
+							 styleId="casteID"
+							 styleClass="text"
+							 size="20" />
+			</td>
+		</tr>
+		<% } %>
 	</table>
 	</div>
 	</div>

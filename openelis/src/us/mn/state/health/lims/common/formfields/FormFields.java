@@ -102,7 +102,8 @@ public class FormFields {
         FirstNameFirst,
         AllowEditOrRemoveTests,
         UseSampleSource,
-        SupportPrimaryRelative
+        SupportPrimaryRelative,
+		Caste
     }
 
 	private static FormFields instance = null;

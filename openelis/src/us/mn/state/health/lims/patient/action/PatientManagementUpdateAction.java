@@ -325,6 +325,7 @@ public class PatientManagementUpdateAction extends BaseAction implements IPatien
         persistIdentityType(patientInfo.getHealthRegion(), "HEALTH REGION");
         persistIdentityType(patientInfo.getOtherNationality(), "OTHER NATIONALITY");
         persistIdentityType(patientInfo.getPrimaryRelative(), "primaryRelative");
+        persistIdentityType(patientInfo.getCaste(), "CASTE");
     }
 
     private void persistPatientAddressInfo(PatientManagmentInfo patientInfo, Person person) {
