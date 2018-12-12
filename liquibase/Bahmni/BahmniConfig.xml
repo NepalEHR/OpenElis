@@ -1802,7 +1802,7 @@
 	 <changeSet context="bahmni" author="suruchi" id="update-test-name-2018-12-11-04:10">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
-                SELECT * from dhis2_lab_test where ehr_test_id=get_test_id_from_test_name('PBS for Malaria,Filaria Parasites');
+                SELECT count(*) from dhis2_lab_test where ehr_test_id=get_test_id_from_test_name('PBS for Malaria,Filaria Parasites');
             </sqlCheck>
         </preConditions>
         <comment>Update names of dhis_lab_test</comment>
