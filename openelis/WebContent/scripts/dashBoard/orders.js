@@ -26,12 +26,12 @@ function order(div, orderArray, generateLink, getColumns, alwaysValidate) {
             this.orders = jQuery.map(this.orderArray, function(order, i) {
                 order.id= i;
                 order.link = generateLink(order, alwaysValidate);
-                order.name = order.firstName + " " + (order.middleName ? order.middleName + " " : "") + order.lastName;
                 order.sampleCollectionDisplayDate = order.sampleCollectionDate ? OpenElis.Utils.parseTimeFromDateTime(order.sampleCollectionDate) : '';
                 order.orderDate = order.orderDate ? OpenElis.Utils.parseTimeFromDateTime(order.orderDate) : '';
                 order.orderEnteredDate = order.orderEnteredDate ? OpenElis.Utils.parseTimeFromDateTime(order.orderEnteredDate) : '';
                 order.completedDate = order.completedDate ? OpenElis.Utils.parseTimeFromDateTime(order.completedDate) : '';
                 order.source = changeSourceColor(order.source);
+                order.name = order.firstName + (order.middleName ? " " + order.middleName : "") + (order.lastName ? " " +order.lastName : "");
                 return order;
             });
             return this.orders;
