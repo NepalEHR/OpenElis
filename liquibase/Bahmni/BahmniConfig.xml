@@ -1799,5 +1799,17 @@
         <comment>Bulk insertion of mappers</comment>
         <sqlFile path="migration/dhis_mapper_insertStatements.sql" />
     </changeSet>
+	 <changeSet context="bahmni" author="suruchi" id="update-test-name-2018-12-11-04:10">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT * from dhis2_lab_test where ehr_test_id=get_test_id_from_test_name('PBS for Malaria,Filaria Parasites');
+            </sqlCheck>
+        </preConditions>
+        <comment>Update names of dhis_lab_test</comment>
+        <sql>
+            INSERT INTO dhis2_lab_test (dhis_test_id, ehr_test_id) SELECT get_dhis_test_id('PBS'),get_test_id_from_test_name('PBS for Malaria,Filaria Parasites') WHERE get_test_id_from_test_name('PBS for Malaria,Filaria Parasites') IS NOT NULL AND get_dhis_test_id('PBS') IS NOT NULL; 
+            INSERT INTO dhis2_lab_test (dhis_test_id, ehr_test_id) SELECT get_dhis_test_id('MP total'),get_test_id_from_test_name('PBS for Malaria,Filaria Parasites') WHERE get_test_id_from_test_name('PBS for Malaria,Filaria Parasites') IS NOT NULL AND get_dhis_test_id('MP total') IS NOT NULL; 
+        </sql>
+    </changeSet>
 
 </databaseChangeLog>
