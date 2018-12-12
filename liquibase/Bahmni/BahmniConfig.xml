@@ -1812,4 +1812,15 @@
         </sql>
     </changeSet>
 
+    <changeSet context="bahmni" author="dipakthapa" id="patient-identity-type-2018-10-22-21:10">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from clinlims.patient_identity_type where identity_type='CASTE'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO clinlims.patient_identity_type(id, identity_type, description, lastupdated) VALUES (nextval('clinlims.patient_identity_type_seq'), 'CASTE', 'Patient Caste', now());
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

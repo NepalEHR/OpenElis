@@ -74,6 +74,7 @@ public class PatientManagmentInfo implements Serializable {
 	private static List<IdValuePair> educationList;
 	private static List<IdValuePair> maritialList;
 	private static List<IdValuePair> nationalityList;
+	private String caste;
 
     public PatientManagmentInfo(){
         AddressPartDAO addressPartDAO = new AddressPartDAOImpl();
@@ -210,7 +211,12 @@ public class PatientManagmentInfo implements Serializable {
 	public void setGenders(List<IdValuePair> genderList) {
 		genders = genderList;
 	}
-
+	public String getCaste() {
+		return caste;
+	}
+	public void setCaste(String caste) {
+		this.caste = caste;
+	}
 
 	public List<IdValuePair> getGenders() {
 		if( genders == null){

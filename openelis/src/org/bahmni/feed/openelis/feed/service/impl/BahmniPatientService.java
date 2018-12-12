@@ -63,6 +63,7 @@ public class BahmniPatientService {
     public static final String PRIMARY_RELATIVE_KEY_NAME = "PRIMARYRELATIVE";
     public static final String OCCUPATION_KEY_NAME = "OCCUPATION";
     public static final String REGISTRATION_KEY_NAME = "ST";
+    public static final String PATIENT_CASTE_KEY_NAME = "CASTE";
 
     public BahmniPatientService() {
         this(new PatientDAOImpl(), new PersonDAOImpl(), new PatientIdentityDAOImpl(),
@@ -128,6 +129,7 @@ public class BahmniPatientService {
 
         addOrUpdate(patient, patientIdentityTypes, patientIdentities, PRIMARY_RELATIVE_KEY_NAME, getAttributeValue(openMRSPerson, OpenMRSPersonAttributeType.PRIMARY_RELATIVE), sysUserId);
         addOrUpdate(patient, patientIdentityTypes, patientIdentities, OCCUPATION_KEY_NAME, getAttributeDisplay(openMRSPerson, OpenMRSPersonAttributeType.OCCUPATION), sysUserId);
+        addOrUpdate(patient, patientIdentityTypes, patientIdentities, PATIENT_CASTE_KEY_NAME, getAttributeDisplay(openMRSPerson, OpenMRSPersonAttributeType.CASTE), sysUserId);
     }
 
     private void insertOrUpdateAddressPart(PersonAddresses personAddresses, String partName, PersonAddress personAddress) {
@@ -193,6 +195,10 @@ public class BahmniPatientService {
         String occupation = getAttributeDisplay(openMRSPerson, OpenMRSPersonAttributeType.OCCUPATION);
         if (occupation != null) {
             addPatientIdentity(patient, patientIdentityTypes, OCCUPATION_KEY_NAME, occupation, sysUserId);
+        }
+        String caste = getAttributeDisplay(openMRSPerson, OpenMRSPersonAttributeType.CASTE);
+        if (caste != null) {
+            addPatientIdentity(patient, patientIdentityTypes, PATIENT_CASTE_KEY_NAME, caste, sysUserId);
         }
     }
 
