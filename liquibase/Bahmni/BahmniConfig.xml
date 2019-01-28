@@ -1823,4 +1823,21 @@
         </sql>
     </changeSet>
 
+    <changeSet context="bahmni" author="dipakthapa" id="ethnicity-2019-01-28-12:10">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from clinlims.ethnicity where description='1 - Dalit';
+            </sqlCheck>
+        </preConditions>
+        <comment>Insert statements into enthnicity table</comment>
+        <sql>
+            INSERT INTO clinlims.ethnicity(id, ethnic_type, description, is_active) VALUES (1, 1, '1 - Dalit', 'Y');
+            INSERT INTO clinlims.ethnicity(id, ethnic_type, description, is_active) VALUES (2, 2, '2 - Janajati', 'Y');
+            INSERT INTO clinlims.ethnicity(id, ethnic_type, description, is_active) VALUES (3, 3, '3 - Madhesi', 'Y');
+            INSERT INTO clinlims.ethnicity(id, ethnic_type, description, is_active) VALUES (4, 4, '4 - Muslim', 'Y');
+            INSERT INTO clinlims.ethnicity(id, ethnic_type, description, is_active) VALUES (5, 5, '5 - Brahman/Chhetri', 'Y');
+            INSERT INTO clinlims.ethnicity(id, ethnic_type, description, is_active) VALUES (6, 6, '6 - Others', 'Y');
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
